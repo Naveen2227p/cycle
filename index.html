@@ -5,131 +5,203 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cycle Lending Portal</title>
   <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    * {
+      box-sizing: border-box;
       margin: 0;
-      padding: 30px 15px;
-      background-color: #f4f7f6;
-      color: #333;
+      padding: 0;
     }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f1f5f9;
+      color: #334155;
+      padding: 16px;
+      line-height: 1.5;
+    }
+
     .container {
-      max-width: 950px;
+      max-width: 1000px;
       margin: 0 auto;
     }
+
     h1 {
       text-align: center;
-      color: #2c3e50;
-      margin-bottom: 30px;
+      color: #0f172a;
+      font-size: 1.75rem;
+      margin-bottom: 20px;
     }
+
+    /* Cards */
     .card {
-      background: #fff;
-      border-radius: 10px;
-      padding: 25px;
-      margin-bottom: 25px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
     }
+
     .card h2 {
-      margin-top: 0;
-      color: #34495e;
-      border-bottom: 2px solid #ecf0f1;
-      padding-bottom: 10px;
+      font-size: 1.25rem;
+      color: #1e293b;
+      margin-bottom: 16px;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 8px;
     }
-    
-    /* Cycle Grid */
+
+    /* Responsive Grid for Cycle Showcase */
     .cycle-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 15px;
-      margin-top: 15px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
     }
-    .cycle-item {
+
+    .cycle-card {
+      background: #f8fafc;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
-      padding: 15px;
-      background-color: #fafafa;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
-    .cycle-item h4 { margin: 0 0 8px 0; color: #2c3e50; }
+
+    .cycle-card h4 {
+      font-size: 1rem;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
     .badge {
       display: inline-block;
-      padding: 4px 8px;
-      font-size: 12px;
-      border-radius: 12px;
-      font-weight: bold;
+      align-self: flex-start;
+      margin-top: 8px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
     }
-    .badge-available { background: #e8f8f5; color: #27ae60; }
-    .badge-rented { background: #fef9e7; color: #d35400; }
 
-    /* Booking Form */
-    form {
+    .badge-available { background-color: #dcfce7; color: #15803d; }
+    .badge-rented { background-color: #fef3c7; color: #b45309; }
+
+    /* Responsive Form */
+    .form-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      margin-top: 15px;
+      grid-template-columns: 1fr;
+      gap: 16px;
     }
+
+    @media (min-width: 640px) {
+      .form-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
     .form-group {
       display: flex;
       flex-direction: column;
     }
+
     .form-group label {
-      font-size: 14px;
+      font-size: 0.875rem;
       font-weight: 600;
-      margin-bottom: 5px;
+      margin-bottom: 6px;
     }
-    .form-group input, .form-group select {
-      padding: 10px;
-      border: 1px solid #ccc;
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
       border-radius: 6px;
-      font-size: 14px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
     }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: #2563eb;
+    }
+
     .btn-submit {
-      grid-column: 1 / -1;
+      width: 100%;
       padding: 12px;
-      background-color: #27ae60;
-      color: white;
+      background-color: #2563eb;
+      color: #ffffff;
+      font-weight: 600;
       border: none;
       border-radius: 6px;
-      font-size: 16px;
-      font-weight: bold;
+      font-size: 1rem;
       cursor: pointer;
-      transition: background 0.2s;
+      margin-top: 16px;
+      transition: background-color 0.2s;
     }
-    .btn-submit:hover { background-color: #219150; }
 
-    /* Table Styles */
-    .table-container { overflow-x: auto; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
+    .btn-submit:hover {
+      background-color: #1d4ed8;
     }
-    th, td {
-      padding: 12px 15px;
-      text-align: left;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    th {
-      background-color: #f8fafc;
-      color: #475569;
-      font-size: 14px;
-    }
-    .status-Completed { color: #27ae60; font-weight: bold; }
-    .status-Active { color: #2980b9; font-weight: bold; }
-    .status-Pending { color: #e67e22; font-weight: bold; }
 
-    /* Filters */
+    /* Filter Controls */
+    .filter-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
     .filter-btn {
       padding: 6px 14px;
       border: 1px solid #cbd5e1;
-      background: #fff;
+      background: #ffffff;
       border-radius: 6px;
+      font-size: 0.875rem;
       cursor: pointer;
-      margin-right: 5px;
     }
+
     .filter-btn.active {
-      background: #34495e;
-      color: #fff;
-      border-color: #34495e;
+      background-color: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+    }
+
+    /* Responsive Table Wrapper */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 550px; /* Prevents squishing on mobile screens */
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 0.9rem;
+    }
+
+    th {
+      background-color: #f8fafc;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .status-Completed { color: #16a34a; font-weight: 600; }
+    .status-Active { color: #2563eb; font-weight: 600; }
+
+    .btn-cancel {
+      padding: 4px 8px;
+      border: 1px solid #ef4444;
+      background: #fef2f2;
+      color: #dc2626;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
     }
   </style>
 </head>
@@ -138,76 +210,84 @@
   <div class="container">
     <h1>🚲 Cycle Lending Portal</h1>
 
-    <!-- Available Cycles -->
+    <!-- Cycles Available -->
     <div class="card">
       <h2>Available Cycles</h2>
       <div class="cycle-grid">
-        <div class="cycle-item">
-          <h4>Mountain Bike X1</h4>
-          <p>Rate: $5/hr</p>
+        <div class="cycle-card">
+          <div>
+            <h4>Mountain Bike X1</h4>
+            <p style="font-size: 0.875rem; color: #64748b;">Rate: $5/hr</p>
+          </div>
           <span class="badge badge-available">Available</span>
         </div>
-        <div class="cycle-item">
-          <h4>City Cruiser 2000</h4>
-          <p>Rate: $3/hr</p>
+        <div class="cycle-card">
+          <div>
+            <h4>City Cruiser 2000</h4>
+            <p style="font-size: 0.875rem; color: #64748b;">Rate: $3/hr</p>
+          </div>
           <span class="badge badge-available">Available</span>
         </div>
-        <div class="cycle-item">
-          <h4>Road Racer 3000</h4>
-          <p>Rate: $7/hr</p>
-          <span class="badge badge-rented">Currently Rented</span>
+        <div class="cycle-card">
+          <div>
+            <h4>Road Racer 3000</h4>
+            <p style="font-size: 0.875rem; color: #64748b;">Rate: $7/hr</p>
+          </div>
+          <span class="badge badge-rented">Rented</span>
         </div>
       </div>
     </div>
 
-    <!-- New Booking Section -->
+    <!-- Booking Form -->
     <div class="card">
       <h2>Book a Cycle</h2>
       <form id="booking-form">
-        <div class="form-group">
-          <label for="user-name">Your Name</label>
-          <input type="text" id="user-name" placeholder="Enter full name" required />
-        </div>
-        <div class="form-group">
-          <label for="cycle-select">Select Cycle</label>
-          <select id="cycle-select" required>
-            <option value="">-- Choose a Cycle --</option>
-            <option value="Mountain Bike X1">Mountain Bike X1</option>
-            <option value="City Cruiser 2000">City Cruiser 2000</option>
-            <option value="Road Racer 3000">Road Racer 3000</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="booking-date">Date</label>
-          <input type="date" id="booking-date" required />
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="user-name">Your Name</label>
+            <input type="text" id="user-name" placeholder="John Doe" required />
+          </div>
+          <div class="form-group">
+            <label for="cycle-select">Select Cycle</label>
+            <select id="cycle-select" required>
+              <option value="">Choose Cycle</option>
+              <option value="Mountain Bike X1">Mountain Bike X1</option>
+              <option value="City Cruiser 2000">City Cruiser 2000</option>
+              <option value="Road Racer 3000">Road Racer 3000</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="booking-date">Date</label>
+            <input type="date" id="booking-date" required />
+          </div>
         </div>
         <button type="submit" class="btn-submit">Confirm Booking</button>
       </form>
     </div>
 
-    <!-- Booking History Section -->
+    <!-- Booking History -->
     <div class="card">
       <h2>Booking History</h2>
-      <div style="margin-bottom: 15px;">
+      <div class="filter-group">
         <button class="filter-btn active" onclick="filterHistory('All', this)">All</button>
         <button class="filter-btn" onclick="filterHistory('Active', this)">Active</button>
         <button class="filter-btn" onclick="filterHistory('Completed', this)">Completed</button>
       </div>
 
-      <div class="table-container">
+      <div class="table-responsive">
         <table>
           <thead>
             <tr>
-              <th>Booking ID</th>
+              <th>ID</th>
               <th>User</th>
-              <th>Cycle Name</th>
+              <th>Cycle</th>
               <th>Date</th>
               <th>Status</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody id="history-table-body">
-            <!-- Dynamic rows will render here -->
+            <!-- Dynamic Content -->
           </tbody>
         </table>
       </div>
@@ -215,33 +295,27 @@
   </div>
 
   <script>
-    // Initial sample data
     const initialBookings = [
-      { id: "BK-1001", user: "John Doe", cycle: "Mountain Bike X1", date: "2026-09-20", status: "Completed" },
-      { id: "BK-1002", user: "Jane Smith", cycle: "City Cruiser 2000", date: "2026-09-22", status: "Active" }
+      { id: "BK-1001", user: "Alex Johnson", cycle: "Mountain Bike X1", date: "2026-09-20", status: "Completed" },
+      { id: "BK-1002", user: "Maria Garcia", cycle: "City Cruiser 2000", date: "2026-09-24", status: "Active" }
     ];
 
-    // Retrieve from LocalStorage or set defaults
     let bookings = JSON.parse(localStorage.getItem('cycle_bookings')) || initialBookings;
 
-    // Set default date input to today
     document.getElementById('booking-date').valueAsDate = new Date();
 
     function renderHistory(filter = 'All') {
       const tableBody = document.getElementById("history-table-body");
       tableBody.innerHTML = "";
 
-      const filteredBookings = bookings.filter(item => {
-        if (filter === 'All') return true;
-        return item.status === filter;
-      });
+      const filteredBookings = bookings.filter(item => filter === 'All' || item.status === filter);
 
       if (filteredBookings.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#888;">No bookings found.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8;">No bookings found.</td></tr>`;
         return;
       }
 
-      filteredBookings.forEach((item, index) => {
+      filteredBookings.forEach(item => {
         const row = document.createElement("tr");
         row.innerHTML = `
           <td><strong>${item.id}</strong></td>
@@ -250,53 +324,45 @@
           <td>${item.date}</td>
           <td class="status-${item.status}">${item.status}</td>
           <td>
-            ${item.status === 'Active' ? `<button onclick="cancelBooking('${item.id}')" style="color:red; cursor:pointer; border:1px solid red; background:none; border-radius:4px; padding:2px 6px;">Cancel</button>` : '-'}
+            ${item.status === 'Active' 
+              ? `<button class="btn-cancel" onclick="cancelBooking('${item.id}')">Complete</button>` 
+              : '-'}
           </td>
         `;
         tableBody.appendChild(row);
       });
     }
 
-    // Handle new booking submit
     document.getElementById("booking-form").addEventListener("submit", function(e) {
       e.preventDefault();
 
-      const userName = document.getElementById("user-name").value;
-      const cycle = document.getElementById("cycle-select").value;
-      const date = document.getElementById("booking-date").value;
-
       const newBooking = {
         id: "BK-" + Math.floor(1000 + Math.random() * 9000),
-        user: userName,
-        cycle: cycle,
-        date: date,
+        user: document.getElementById("user-name").value,
+        cycle: document.getElementById("cycle-select").value,
+        date: document.getElementById("booking-date").value,
         status: "Active"
       };
 
-      bookings.unshift(newBooking); // Add to beginning
+      bookings.unshift(newBooking);
       localStorage.setItem('cycle_bookings', JSON.stringify(bookings));
-      
       this.reset();
       document.getElementById('booking-date').valueAsDate = new Date();
       renderHistory();
-      alert("Booking confirmed successfully!");
     });
 
-    // Cancel booking helper
     function cancelBooking(id) {
       bookings = bookings.map(b => b.id === id ? {...b, status: 'Completed'} : b);
       localStorage.setItem('cycle_bookings', JSON.stringify(bookings));
       renderHistory();
     }
 
-    // Filter button helper
     function filterHistory(status, btn) {
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       renderHistory(status);
     }
 
-    // Initial Render
     renderHistory();
   </script>
 
