@@ -142,6 +142,21 @@
       cursor: not-allowed;
     }
 
+    .btn-return {
+      background: var(--warning);
+      color: #000;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    .btn-return:hover {
+      opacity: 0.9;
+    }
+
     /* Modal Overlay */
     .modal-overlay {
       position: fixed;
@@ -287,9 +302,9 @@
 
   <!-- History Modal -->
   <div class="modal-overlay" id="history-modal">
-    <div class="modal" style="max-width: 700px;">
+    <div class="modal" style="max-width: 750px;">
       <button class="modal-close" onclick="toggleModal('history-modal')">✖</button>
-      <h2>Booking History</h2>
+      <h2>Booking History & Active Rides</h2>
       
       <div style="overflow-x: auto;">
         <table>
@@ -301,6 +316,7 @@
               <th>Duration</th>
               <th>Payment</th>
               <th>Status</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody id="history-list"></tbody>
@@ -310,7 +326,8 @@
   </div>
 
   <script>
-    const cycles = [
+    // Initial cycle state loaded from localStorage or default
+    let cycles = JSON.parse(localStorage.getItem('cycle_list')) || [
       { id: 1, name: "Urban Cruiser 300", type: "City Bike", rate: 5, available: true },
       { id: 2, name: "TrailBlazer X", type: "Mountain Bike", rate: 8, available: true },
       { id: 3, name: "Volt E-Bike Pro", type: "Electric Bike", rate: 12, available: false },
@@ -319,6 +336,10 @@
 
     let selectedCycle = null;
     let selectedPaymentMethod = 'UPI';
+
+    function saveCycleState() {
+      localStorage.setItem('cycle_list', JSON.stringify(cycles));
+    }
 
     function renderCycles() {
       const container = document.getElementById('cycle-container');
@@ -373,13 +394,15 @@
       const hours = document.getElementById('rent-hours').value;
       const total = selectedCycle.rate * hours;
 
-      // Update Cycle availability
+      // Update Cycle availability & persist state
       selectedCycle.available = false;
+      saveCycleState();
 
       // Record History
       const history = JSON.parse(localStorage.getItem('cycle_history') || '[]');
       history.unshift({
         id: 'BK-' + Math.floor(1000 + Math.random() * 9000),
+        cycleId: selectedCycle.id,
         user: userName,
         cycle: selectedCycle.name,
         hours: `${hours} hr(s)`,
@@ -394,15 +417,40 @@
       toggleModal('rent-modal');
       renderCycles();
       renderHistory();
-      alert('Payment Successful! Bike unlocked.');
+      alert('🔒 Payment Successful! Bike Unlocked. Enjoy your ride!');
     });
+
+    function returnCycle(bookingId) {
+      const history = JSON.parse(localStorage.getItem('cycle_history') || '[]');
+      const booking = history.find(item => item.id === bookingId);
+
+      if (booking && booking.status === 'Active') {
+        // Update booking status
+        booking.status = 'Returned';
+
+        // Set cycle back to available
+        const cycle = cycles.find(c => c.id === booking.cycleId);
+        if (cycle) {
+          cycle.available = true;
+          saveCycleState();
+        }
+
+        // Save updated history
+        localStorage.setItem('cycle_history', JSON.stringify(history));
+
+        // Refresh UI
+        renderCycles();
+        renderHistory();
+        alert(`🔓 ${booking.cycle} returned and locked successfully!`);
+      }
+    }
 
     function renderHistory() {
       const history = JSON.parse(localStorage.getItem('cycle_history') || '[]');
       const container = document.getElementById('history-list');
 
       if (history.length === 0) {
-        container.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">No booking history found.</td></tr>`;
+        container.innerHTML = `<tr><td colspan="7" style="text-align:center; color: var(--text-muted);">No booking history found.</td></tr>`;
         return;
       }
 
@@ -413,7 +461,16 @@
           <td>${item.cycle}</td>
           <td>${item.hours}</td>
           <td>${item.payment} (${item.amount})</td>
-          <td><span style="color: var(--accent); font-weight: 600;">${item.status}</span></td>
+          <td>
+            <span style="color: ${item.status === 'Active' ? 'var(--accent)' : 'var(--text-muted)'}; font-weight: 600;">
+              ${item.status}
+            </span>
+          </td>
+          <td>
+            ${item.status === 'Active' 
+              ? `<button class="btn-return" onclick="returnCycle('${item.id}')">Return Bike</button>` 
+              : `<span style="color: var(--success); font-size: 0.85rem;">Completed</span>`}
+          </td>
         </tr>
       `).join('');
     }
