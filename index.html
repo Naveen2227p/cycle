@@ -40,7 +40,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 32px;
+      margin-bottom: 24px;
       border-bottom: 1px solid var(--border);
       padding-bottom: 16px;
     }
@@ -68,6 +68,37 @@
     .btn-history:hover {
       background: var(--accent);
       color: #000;
+    }
+
+    /* Category Filter Section */
+    .filter-container {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .filter-btn.active {
+      background: var(--accent);
+      color: #0f172a;
+      border-color: var(--accent);
     }
 
     /* Cycle Grid */
@@ -99,18 +130,24 @@
       transform: translateY(-4px);
     }
 
+    .badge-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
     .badge {
       display: inline-block;
       padding: 4px 10px;
       border-radius: 20px;
       font-size: 0.75rem;
       font-weight: 700;
-      width: fit-content;
-      margin-bottom: 12px;
     }
 
     .badge-available { background: rgba(34, 197, 94, 0.2); color: var(--success); }
     .badge-rented { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .badge-category { background: rgba(56, 189, 248, 0.15); color: var(--accent); border: 1px solid rgba(56, 189, 248, 0.3); }
 
     .price {
       font-size: 1.25rem;
@@ -260,6 +297,14 @@
       <button class="btn-history" onclick="toggleModal('history-modal')">📋 Booking History</button>
     </header>
 
+    <!-- Category Filters -->
+    <div class="filter-container">
+      <button class="filter-btn active" onclick="filterCategory('All', this)">All Cycles</button>
+      <button class="filter-btn" onclick="filterCategory('Adults', this)">👨‍💼 Adults</button>
+      <button class="filter-btn" onclick="filterCategory('Children', this)">🧒 Children</button>
+      <button class="filter-btn" onclick="filterCategory('Senior Citizens', this)">🧓 Senior Citizens</button>
+    </div>
+
     <div class="section-title">Select an Available Cycle</div>
     <div class="cycle-grid" id="cycle-container"></div>
   </div>
@@ -327,16 +372,22 @@
 
   <script>
     const defaultCycles = [
-      { id: 1, name: "Urban Cruiser 300", type: "City Bike", rate: 5, available: true },
-      { id: 2, name: "TrailBlazer X", type: "Mountain Bike", rate: 8, available: true },
-      { id: 3, name: "Volt E-Bike Pro", type: "Electric Bike", rate: 12, available: true },
-      { id: 4, name: "Aero Speedster", type: "Road Bike", rate: 7, available: true }
+      { id: 1, name: "Urban Cruiser 300", category: "Adults", type: "City Bike", rate: 5, available: true },
+      { id: 2, name: "TrailBlazer X", category: "Adults", type: "Mountain Bike", rate: 8, available: true },
+      { id: 3, name: "Volt E-Bike Pro", category: "Adults", type: "Electric Bike", rate: 12, available: true },
+      { id: 4, name: "Mini Rider 16", category: "Children", type: "Training Wheels Bike", rate: 3, available: true },
+      { id: 5, name: "Junior Speedster", category: "Children", type: "Kids Sports Bike", rate: 4, available: true },
+      { id: 6, name: "Comfort Cruise Trike", category: "Senior Citizens", type: "3-Wheel Electric Trike", rate: 6, available: true },
+      { id: 7, name: "EasyStep Low-Entry", category: "Senior Citizens", type: "Ergonomic Step-Through", rate: 5, available: true }
     ];
 
-    // Get current cycles state or load defaults
+    let currentCategory = 'All';
+
+    // Fetch cycle list from localStorage or load default set
     function getCycles() {
       const saved = localStorage.getItem('cycle_list');
-      return saved ? JSON.parse(saved) : defaultCycles;
+      if (!saved) return defaultCycles;
+      return JSON.parse(saved);
     }
 
     function saveCycles(cycles) {
@@ -346,15 +397,35 @@
     let selectedCycle = null;
     let selectedPaymentMethod = 'UPI';
 
+    function filterCategory(category, buttonElement) {
+      currentCategory = category;
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      buttonElement.classList.add('active');
+      renderCycles();
+    }
+
     function renderCycles() {
       const cycles = getCycles();
+      const filteredCycles = currentCategory === 'All' 
+        ? cycles 
+        : cycles.filter(c => c.category === currentCategory);
+
       const container = document.getElementById('cycle-container');
-      container.innerHTML = cycles.map(cycle => `
+      
+      if (filteredCycles.length === 0) {
+        container.innerHTML = `<p style="color: var(--text-muted); grid-column: 1 / -1;">No cycles available in this category.</p>`;
+        return;
+      }
+
+      container.innerHTML = filteredCycles.map(cycle => `
         <div class="cycle-card">
           <div>
-            <span class="badge ${cycle.available ? 'badge-available' : 'badge-rented'}">
-              ${cycle.available ? 'Available' : 'Currently Rented'}
-            </span>
+            <div class="badge-wrapper">
+              <span class="badge ${cycle.available ? 'badge-available' : 'badge-rented'}">
+                ${cycle.available ? 'Available' : 'Currently Rented'}
+              </span>
+              <span class="badge badge-category">${cycle.category}</span>
+            </div>
             <h3>${cycle.name}</h3>
             <p style="color: var(--text-muted); font-size: 0.85rem;">${cycle.type}</p>
             <div class="price">$${cycle.rate} <span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">/ hr</span></div>
@@ -401,7 +472,7 @@
       const hours = document.getElementById('rent-hours').value;
       const total = selectedCycle.rate * hours;
 
-      // 1. Mark cycle as rented (unavailable)
+      // 1. Mark cycle as rented
       const cycles = getCycles();
       const cycleToUpdate = cycles.find(c => c.id === selectedCycle.id);
       if (cycleToUpdate) {
@@ -423,7 +494,7 @@
       });
       localStorage.setItem('cycle_history', JSON.stringify(history));
 
-      // 3. Reset and Refresh UI
+      // 3. Reset UI
       this.reset();
       toggleModal('rent-modal');
       renderCycles();
@@ -431,17 +502,14 @@
       alert('🔒 Payment Successful! Bike Unlocked. Enjoy your ride!');
     });
 
-    // Complete ride and make cycle available for next person
     function returnCycle(bookingId) {
       const history = JSON.parse(localStorage.getItem('cycle_history') || '[]');
       const booking = history.find(item => item.id === bookingId);
 
       if (booking && booking.status === 'Active') {
-        // Mark booking as returned
         booking.status = 'Returned';
         localStorage.setItem('cycle_history', JSON.stringify(history));
 
-        // Make cycle available again in master array
         const cycles = getCycles();
         const cycle = cycles.find(c => c.id === booking.cycleId);
         if (cycle) {
@@ -449,7 +517,6 @@
           saveCycles(cycles);
         }
 
-        // Re-render dashboard and history
         renderCycles();
         renderHistory();
         alert(`🔓 ${booking.cycle} has been returned successfully! It is now available for the next rider.`);
