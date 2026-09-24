@@ -95,10 +95,22 @@
     }
 
     /* Category Filter Section */
+    .filter-section {
+      margin-bottom: 24px;
+    }
+
+    .filter-label {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
     .filter-container {
       display: flex;
-      gap: 12px;
-      margin-bottom: 24px;
+      gap: 10px;
       flex-wrap: wrap;
     }
 
@@ -125,11 +137,49 @@
       border-color: var(--accent);
     }
 
+    .sub-filter-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px dashed var(--border);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 16px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: all 0.2s;
+    }
+
+    .sub-filter-btn:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .sub-filter-btn.active {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
     /* Cycle Grid */
+    .section-title-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
     .section-title {
       font-size: 1.25rem;
-      margin-bottom: 16px;
       color: var(--text-muted);
+    }
+
+    .count-badge {
+      font-size: 0.85rem;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 12px;
+      color: var(--accent);
     }
 
     .cycle-grid {
@@ -361,14 +411,27 @@
     </header>
 
     <!-- Category Filters -->
-    <div class="filter-container">
-      <button class="filter-btn active" onclick="filterCategory('All', this)">All Cycles</button>
-      <button class="filter-btn" onclick="filterCategory('Adults', this)">👨‍💼 Adults (18+)</button>
-      <button class="filter-btn" onclick="filterCategory('Children', this)">🧒 Children (3-17)</button>
-      <button class="filter-btn" onclick="filterCategory('Senior Citizens', this)">🧓 Senior Citizens (60+)</button>
+    <div class="filter-section">
+      <div class="filter-label">Select Age Category</div>
+      <div class="filter-container">
+        <button class="filter-btn active" onclick="filterCategory('All', this)">All Cycles</button>
+        <button class="filter-btn" onclick="filterCategory('Adults', this)">👨‍💼 Adults (18+)</button>
+        <button class="filter-btn" onclick="filterCategory('Children', this)">🧒 Children (3-17)</button>
+        <button class="filter-btn" onclick="filterCategory('Senior Citizens', this)">🧓 Senior Citizens (60+)</button>
+      </div>
     </div>
 
-    <div class="section-title">Select an Available Cycle</div>
+    <!-- Dynamic Sub-Age Group Filters -->
+    <div class="filter-section" id="sub-filter-wrapper" style="display: none;">
+      <div class="filter-label">Filter by Specific Age Bracket</div>
+      <div class="filter-container" id="sub-filter-container"></div>
+    </div>
+
+    <div class="section-title-wrapper">
+      <div class="section-title" id="display-title">Available Cycles</div>
+      <span class="count-badge" id="cycle-count">0 Bikes Available</span>
+    </div>
+
     <div class="cycle-grid" id="cycle-container"></div>
   </div>
 
@@ -465,27 +528,28 @@
   </div>
 
   <script>
-    // Expanded cycle database with images and age limits
+    // Expanded cycle database with images and explicit age brackets
     const defaultCycles = [
       // Children Models (Age 3 - 17)
-      { id: 1, name: "TinyTots Balance 12", category: "Children", ageGroup: "Age: 3 - 5 yrs", type: "Balance Bike", rate: 2, available: true, image: "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=500&auto=format&fit=crop" },
-      { id: 2, name: "Mini Rider 16", category: "Children", ageGroup: "Age: 5 - 8 yrs", type: "Training Wheels Bike", rate: 3, available: true, image: "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=500&auto=format&fit=crop" },
-      { id: 3, name: "Junior Speedster 20", category: "Children", ageGroup: "Age: 8 - 12 yrs", type: "Kids Sports Bike", rate: 4, available: true, image: "https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?w=500&auto=format&fit=crop" },
-      { id: 4, name: "Blaze BMX 24", category: "Children", ageGroup: "Age: 12 - 17 yrs", type: "Freestyle BMX", rate: 5, available: true, image: "https://images.unsplash.com/photo-1511994298241-608e28f14fde?w=500&auto=format&fit=crop" },
+      { id: 1, name: "TinyTots Balance 12", category: "Children", ageBracket: "3-5", ageGroup: "Age: 3 - 5 yrs", type: "Balance Bike", rate: 2, available: true, image: "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=500&auto=format&fit=crop" },
+      { id: 2, name: "Mini Rider 16", category: "Children", ageBracket: "5-8", ageGroup: "Age: 5 - 8 yrs", type: "Training Wheels Bike", rate: 3, available: true, image: "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=500&auto=format&fit=crop" },
+      { id: 3, name: "Junior Speedster 20", category: "Children", ageBracket: "8-12", ageGroup: "Age: 8 - 12 yrs", type: "Kids Sports Bike", rate: 4, available: true, image: "https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?w=500&auto=format&fit=crop" },
+      { id: 4, name: "Blaze BMX 24", category: "Children", ageBracket: "12-17", ageGroup: "Age: 12 - 17 yrs", type: "Freestyle BMX", rate: 5, available: true, image: "https://images.unsplash.com/photo-1511994298241-608e28f14fde?w=500&auto=format&fit=crop" },
 
       // Adult Models (Age 18+)
-      { id: 5, name: "Urban Cruiser 300", category: "Adults", ageGroup: "Age: 18+ yrs", type: "City Commuter", rate: 5, available: true, image: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=500&auto=format&fit=crop" },
-      { id: 6, name: "TrailBlazer X", category: "Adults", ageGroup: "Age: 18+ yrs", type: "Mountain Bike", rate: 8, available: true, image: "https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?w=500&auto=format&fit=crop" },
-      { id: 7, name: "Volt E-Bike Pro", category: "Adults", ageGroup: "Age: 18+ yrs", type: "Electric Bike", rate: 12, available: true, image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500&auto=format&fit=crop" },
-      { id: 8, name: "Aero Speedster", category: "Adults", ageGroup: "Age: 18+ yrs", type: "Road Racing Bike", rate: 7, available: true, image: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=500&auto=format&fit=crop" },
+      { id: 5, name: "Urban Cruiser 300", category: "Adults", ageBracket: "18-35", ageGroup: "Age: 18 - 35 yrs", type: "City Commuter", rate: 5, available: true, image: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=500&auto=format&fit=crop" },
+      { id: 6, name: "TrailBlazer X", category: "Adults", ageBracket: "18-35", ageGroup: "Age: 18 - 35 yrs", type: "Mountain Bike", rate: 8, available: true, image: "https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?w=500&auto=format&fit=crop" },
+      { id: 7, name: "Volt E-Bike Pro", category: "Adults", ageBracket: "36-59", ageGroup: "Age: 36 - 59 yrs", type: "Electric Bike", rate: 12, available: true, image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500&auto=format&fit=crop" },
+      { id: 8, name: "Aero Speedster", category: "Adults", ageBracket: "18-35", ageGroup: "Age: 18 - 35 yrs", type: "Road Racing Bike", rate: 7, available: true, image: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=500&auto=format&fit=crop" },
 
       // Senior Citizens Models (Age 60+)
-      { id: 9, name: "Comfort Cruise Trike", category: "Senior Citizens", ageGroup: "Age: 60+ yrs", type: "3-Wheel Electric Trike", rate: 6, available: true, image: "https://images.unsplash.com/photo-1505705694340-019e1e335916?w=500&auto=format&fit=crop" },
-      { id: 10, name: "EasyStep Low-Entry", category: "Senior Citizens", ageGroup: "Age: 60+ yrs", type: "Ergonomic Step-Through", rate: 5, available: true, image: "https://images.unsplash.com/photo-1511994298241-608e28f14fde?w=500&auto=format&fit=crop" },
-      { id: 11, name: "Serenity Glide E-Trike", category: "Senior Citizens", ageGroup: "Age: 60+ yrs", type: "Dual-Basket Comfort Trike", rate: 7, available: true, image: "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=500&auto=format&fit=crop" }
+      { id: 9, name: "Comfort Cruise Trike", category: "Senior Citizens", ageBracket: "60+", ageGroup: "Age: 60+ yrs", type: "3-Wheel Electric Trike", rate: 6, available: true, image: "https://images.unsplash.com/photo-1505705694340-019e1e335916?w=500&auto=format&fit=crop" },
+      { id: 10, name: "EasyStep Low-Entry", category: "Senior Citizens", ageBracket: "60+", ageGroup: "Age: 60+ yrs", type: "Ergonomic Step-Through", rate: 5, available: true, image: "https://images.unsplash.com/photo-1511994298241-608e28f14fde?w=500&auto=format&fit=crop" },
+      { id: 11, name: "Serenity Glide E-Trike", category: "Senior Citizens", ageBracket: "65+", ageGroup: "Age: 65+ yrs", type: "Dual-Basket Comfort Trike", rate: 7, available: true, image: "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=500&auto=format&fit=crop" }
     ];
 
     let currentCategory = 'All';
+    let currentAgeBracket = 'All';
     let authMode = 'login';
     let currentUser = JSON.parse(localStorage.getItem('pedal_user')) || null;
 
@@ -566,28 +630,75 @@
       alert('Logged out successfully.');
     }
 
-    /* --- Category & Render Logic --- */
+    /* --- Category & Sub-Filter Logic --- */
     function filterCategory(category, buttonElement) {
       currentCategory = category;
+      currentAgeBracket = 'All'; // Reset sub-bracket
+
       document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      buttonElement.classList.add('active');
+
+      renderSubFilters();
+      renderCycles();
+    }
+
+    function filterAgeBracket(bracket, buttonElement) {
+      currentAgeBracket = bracket;
+      document.querySelectorAll('.sub-filter-btn').forEach(btn => btn.classList.remove('active'));
       buttonElement.classList.add('active');
       renderCycles();
     }
 
-    function renderCycles() {
-      const cycles = getCycles();
-      const filteredCycles = currentCategory === 'All' 
-        ? cycles 
-        : cycles.filter(c => c.category === currentCategory);
+    function renderSubFilters() {
+      const wrapper = document.getElementById('sub-filter-wrapper');
+      const container = document.getElementById('sub-filter-container');
 
-      const container = document.getElementById('cycle-container');
-      
-      if (filteredCycles.length === 0) {
-        container.innerHTML = `<p style="color: var(--text-muted); grid-column: 1 / -1;">No cycles available in this category.</p>`;
+      if (currentCategory === 'All') {
+        wrapper.style.display = 'none';
         return;
       }
 
-      container.innerHTML = filteredCycles.map(cycle => `
+      const cycles = getCycles().filter(c => c.category === currentCategory);
+      const brackets = ['All', ...new Set(cycles.map(c => c.ageBracket))];
+
+      wrapper.style.display = 'block';
+      container.innerHTML = brackets.map(b => `
+        <button 
+          class="sub-filter-btn ${b === currentAgeBracket ? 'active' : ''}" 
+          onclick="filterAgeBracket('${b}', this)">
+          ${b === 'All' ? 'All Ages in Category' : 'Age ' + b + ' yrs'}
+        </button>
+      `).join('');
+    }
+
+    function renderCycles() {
+      const cycles = getCycles();
+      
+      // Filter by Main Category
+      let filtered = currentCategory === 'All' 
+        ? cycles 
+        : cycles.filter(c => c.category === currentCategory);
+
+      // Filter by Sub-Age Bracket if selected
+      if (currentAgeBracket !== 'All') {
+        filtered = filtered.filter(c => c.ageBracket === currentAgeBracket);
+      }
+
+      const container = document.getElementById('cycle-container');
+      const displayTitle = document.getElementById('display-title');
+      const cycleCount = document.getElementById('cycle-count');
+
+      displayTitle.innerText = currentCategory === 'All' ? 'All Available Cycles' : `${currentCategory} Cycles`;
+      
+      const availableCount = filtered.filter(c => c.available).length;
+      cycleCount.innerText = `${availableCount} Available / ${filtered.length} Total`;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<p style="color: var(--text-muted); grid-column: 1 / -1; text-align: center; padding: 40px 0;">No cycle models found matching the selected age group.</p>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(cycle => `
         <div class="cycle-card">
           <img src="${cycle.image}" alt="${cycle.name}" class="cycle-img" onerror="this.src='https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=500&auto=format&fit=crop'" />
           <div class="card-body">
