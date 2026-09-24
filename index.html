@@ -94,6 +94,22 @@
       color: #fff;
     }
 
+    .btn-add-cycle {
+      background: #22c55e;
+      color: #0f172a;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+
+    .btn-add-cycle:hover {
+      background: #16a34a;
+      color: #fff;
+    }
+
     /* Category Filter Section */
     .filter-section {
       margin-bottom: 24px;
@@ -403,6 +419,7 @@
     <header>
       <div class="brand">🚲 PedalPulse Kiosk</div>
       <div class="header-actions">
+        <button class="btn-add-cycle" onclick="toggleModal('add-cycle-modal')">➕ Add Bicycle</button>
         <button class="btn-outline" onclick="toggleModal('history-modal')">📋 Booking History</button>
         <div id="auth-header-slot">
           <button class="btn-solid" onclick="openAuthModal('login')">Login / Sign Up</button>
@@ -433,6 +450,54 @@
     </div>
 
     <div class="cycle-grid" id="cycle-container"></div>
+  </div>
+
+  <!-- Add New Bicycle Modal -->
+  <div class="modal-overlay" id="add-cycle-modal">
+    <div class="modal">
+      <button class="modal-close" onclick="toggleModal('add-cycle-modal')">✖</button>
+      <h2 style="margin-bottom: 16px;">Add New Bicycle</h2>
+      
+      <form id="add-cycle-form">
+        <div class="form-group">
+          <label>Bicycle Name</label>
+          <input type="text" id="new-name" placeholder="e.g. Speedster Pro 500" required />
+        </div>
+
+        <div class="form-group">
+          <label>Category</label>
+          <select id="new-category" required onchange="updateAgeBracketOptions()">
+            <option value="Adults">Adults (18+)</option>
+            <option value="Children">Children (3-17)</option>
+            <option value="Senior Citizens">Senior Citizens (60+)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Age Bracket / Target Age Group</label>
+          <select id="new-bracket" required>
+            <!-- Dynamically populated based on category choice -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Cycle Type / Style</label>
+          <input type="text" id="new-type" placeholder="e.g. Mountain Bike, Electric Trike" required />
+        </div>
+
+        <div class="form-group">
+          <label>Hourly Rate ($/hr)</label>
+          <input type="number" id="new-rate" min="1" step="0.5" placeholder="5" required />
+        </div>
+
+        <div class="form-group">
+          <label>Image URL (Optional)</label>
+          <input type="url" id="new-image" placeholder="https://example.com/bike.jpg" />
+        </div>
+
+        <button type="submit" class="btn-action">Add Bicycle to Fleet</button>
+      </form>
+    </div>
   </div>
 
   <!-- Auth Modal (Login / Sign Up) -->
@@ -528,7 +593,7 @@
   </div>
 
   <script>
-    // Expanded cycle database with images and explicit age brackets
+    // Initial default cycle dataset
     const defaultCycles = [
       // Children Models (Age 3 - 17)
       { id: 1, name: "TinyTots Balance 12", category: "Children", ageBracket: "3-5", ageGroup: "Age: 3 - 5 yrs", type: "Balance Bike", rate: 2, available: true, image: "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=500&auto=format&fit=crop" },
@@ -565,6 +630,71 @@
 
     let selectedCycle = null;
     let selectedPaymentMethod = 'UPI';
+
+    /* --- Add New Cycle Logic --- */
+    function updateAgeBracketOptions() {
+      const category = document.getElementById('new-category').value;
+      const bracketSelect = document.getElementById('new-bracket');
+      let options = [];
+
+      if (category === 'Children') {
+        options = [
+          { val: "3-5", label: "Age: 3 - 5 yrs" },
+          { val: "5-8", label: "Age: 5 - 8 yrs" },
+          { val: "8-12", label: "Age: 8 - 12 yrs" },
+          { val: "12-17", label: "Age: 12 - 17 yrs" }
+        ];
+      } else if (category === 'Adults') {
+        options = [
+          { val: "18-35", label: "Age: 18 - 35 yrs" },
+          { val: "36-59", label: "Age: 36 - 59 yrs" }
+        ];
+      } else if (category === 'Senior Citizens') {
+        options = [
+          { val: "60+", label: "Age: 60+ yrs" },
+          { val: "65+", label: "Age: 65+ yrs" }
+        ];
+      }
+
+      bracketSelect.innerHTML = options.map(o => `<option value="${o.val}">${o.label}</option>`).join('');
+    }
+
+    document.getElementById('add-cycle-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const name = document.getElementById('new-name').value;
+      const category = document.getElementById('new-category').value;
+      const bracketSelect = document.getElementById('new-bracket');
+      const ageBracket = bracketSelect.value;
+      const ageGroup = bracketSelect.options[bracketSelect.selectedIndex].text;
+      const type = document.getElementById('new-type').value;
+      const rate = parseFloat(document.getElementById('new-rate').value);
+      const image = document.getElementById('new-image').value || "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=500&auto=format&fit=crop";
+
+      const cycles = getCycles();
+      const newCycle = {
+        id: Date.now(),
+        name,
+        category,
+        ageBracket,
+        ageGroup,
+        type,
+        rate,
+        available: true,
+        image
+      };
+
+      cycles.push(newCycle);
+      saveCycles(cycles);
+
+      this.reset();
+      toggleModal('add-cycle-modal');
+      
+      // Auto switch category filter to see new bike
+      filterCategory(category, document.querySelector(`.filter-btn[onclick*="${category}"]`) || document.querySelectorAll('.filter-btn')[0]);
+      
+      alert(`🎉 "${name}" added successfully to the ${category} category!`);
+    });
 
     /* --- Auth Logic --- */
     function updateAuthHeader() {
@@ -636,7 +766,7 @@
       currentAgeBracket = 'All'; // Reset sub-bracket
 
       document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-      buttonElement.classList.add('active');
+      if (buttonElement) buttonElement.classList.add('active');
 
       renderSubFilters();
       renderCycles();
@@ -645,7 +775,7 @@
     function filterAgeBracket(bracket, buttonElement) {
       currentAgeBracket = bracket;
       document.querySelectorAll('.sub-filter-btn').forEach(btn => btn.classList.remove('active'));
-      buttonElement.classList.add('active');
+      if (buttonElement) buttonElement.classList.add('active');
       renderCycles();
     }
 
@@ -845,6 +975,7 @@
 
     // Initial Load
     updateAuthHeader();
+    updateAgeBracketOptions();
     renderCycles();
     renderHistory();
   </script>
