@@ -43,6 +43,8 @@
       margin-bottom: 24px;
       border-bottom: 1px solid var(--border);
       padding-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
     .brand {
@@ -54,7 +56,13 @@
       color: var(--accent);
     }
 
-    .btn-history {
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-outline {
       background: transparent;
       border: 2px solid var(--accent);
       color: var(--accent);
@@ -65,9 +73,25 @@
       transition: all 0.2s;
     }
 
-    .btn-history:hover {
+    .btn-outline:hover {
       background: var(--accent);
       color: #000;
+    }
+
+    .btn-solid {
+      background: var(--accent);
+      color: #0f172a;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+
+    .btn-solid:hover {
+      background: var(--accent-hover);
+      color: #fff;
     }
 
     /* Category Filter Section */
@@ -154,6 +178,12 @@
       font-weight: 700;
       color: var(--accent);
       margin: 12px 0;
+    }
+
+    .age-tag {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
     }
 
     .btn-action {
@@ -271,6 +301,19 @@
       background: rgba(56, 189, 248, 0.1);
     }
 
+    .auth-toggle {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .auth-toggle span {
+      color: var(--accent);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
     /* History Table */
     table {
       width: 100%;
@@ -294,19 +337,55 @@
   <div class="container">
     <header>
       <div class="brand">🚲 PedalPulse Kiosk</div>
-      <button class="btn-history" onclick="toggleModal('history-modal')">📋 Booking History</button>
+      <div class="header-actions">
+        <button class="btn-outline" onclick="toggleModal('history-modal')">📋 Booking History</button>
+        <div id="auth-header-slot">
+          <button class="btn-solid" onclick="openAuthModal('login')">Login / Sign Up</button>
+        </div>
+      </div>
     </header>
 
     <!-- Category Filters -->
     <div class="filter-container">
       <button class="filter-btn active" onclick="filterCategory('All', this)">All Cycles</button>
-      <button class="filter-btn" onclick="filterCategory('Adults', this)">👨‍💼 Adults</button>
-      <button class="filter-btn" onclick="filterCategory('Children', this)">🧒 Children</button>
-      <button class="filter-btn" onclick="filterCategory('Senior Citizens', this)">🧓 Senior Citizens</button>
+      <button class="filter-btn" onclick="filterCategory('Adults', this)">👨‍💼 Adults (18+)</button>
+      <button class="filter-btn" onclick="filterCategory('Children', this)">🧒 Children (3-17)</button>
+      <button class="filter-btn" onclick="filterCategory('Senior Citizens', this)">🧓 Senior Citizens (60+)</button>
     </div>
 
     <div class="section-title">Select an Available Cycle</div>
     <div class="cycle-grid" id="cycle-container"></div>
+  </div>
+
+  <!-- Auth Modal (Login / Sign Up) -->
+  <div class="modal-overlay" id="auth-modal">
+    <div class="modal">
+      <button class="modal-close" onclick="toggleModal('auth-modal')">✖</button>
+      <h2 style="margin-bottom: 16px;" id="auth-modal-title">Account Login</h2>
+      
+      <form id="auth-form">
+        <div class="form-group" id="name-field-group" style="display: none;">
+          <label>Full Name</label>
+          <input type="text" id="auth-name" placeholder="John Doe" />
+        </div>
+
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="auth-email" placeholder="user@example.com" required />
+        </div>
+
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="auth-password" placeholder="••••••••" required />
+        </div>
+
+        <button type="submit" class="btn-action" id="auth-submit-btn">Login</button>
+
+        <div class="auth-toggle">
+          <p id="auth-toggle-text">Don't have an account? <span onclick="switchAuthMode()">Sign Up</span></p>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- Rent / Payment Modal -->
@@ -317,7 +396,7 @@
       
       <form id="rent-form">
         <div class="form-group">
-          <label>Your Name</label>
+          <label>Rider Name</label>
           <input type="text" id="user-name" placeholder="John Doe" required />
         </div>
         
@@ -371,19 +450,30 @@
   </div>
 
   <script>
+    // Expanded cycle database sorted by target age group
     const defaultCycles = [
-      { id: 1, name: "Urban Cruiser 300", category: "Adults", type: "City Bike", rate: 5, available: true },
-      { id: 2, name: "TrailBlazer X", category: "Adults", type: "Mountain Bike", rate: 8, available: true },
-      { id: 3, name: "Volt E-Bike Pro", category: "Adults", type: "Electric Bike", rate: 12, available: true },
-      { id: 4, name: "Mini Rider 16", category: "Children", type: "Training Wheels Bike", rate: 3, available: true },
-      { id: 5, name: "Junior Speedster", category: "Children", type: "Kids Sports Bike", rate: 4, available: true },
-      { id: 6, name: "Comfort Cruise Trike", category: "Senior Citizens", type: "3-Wheel Electric Trike", rate: 6, available: true },
-      { id: 7, name: "EasyStep Low-Entry", category: "Senior Citizens", type: "Ergonomic Step-Through", rate: 5, available: true }
+      // Children Models (Age 3 - 17)
+      { id: 1, name: "TinyTots Balance 12", category: "Children", ageGroup: "Age: 3 - 5 yrs", type: "Balance Bike", rate: 2, available: true },
+      { id: 2, name: "Mini Rider 16", category: "Children", ageGroup: "Age: 5 - 8 yrs", type: "Training Wheels Bike", rate: 3, available: true },
+      { id: 3, name: "Junior Speedster 20", category: "Children", ageGroup: "Age: 8 - 12 yrs", type: "Kids Sports Bike", rate: 4, available: true },
+      { id: 4, name: "Blaze BMX 24", category: "Children", ageGroup: "Age: 12 - 17 yrs", type: "Freestyle BMX", rate: 5, available: true },
+
+      // Adult Models (Age 18+)
+      { id: 5, name: "Urban Cruiser 300", category: "Adults", ageGroup: "Age: 18+ yrs", type: "City Commuter", rate: 5, available: true },
+      { id: 6, name: "TrailBlazer X", category: "Adults", ageGroup: "Age: 18+ yrs", type: "Mountain Bike", rate: 8, available: true },
+      { id: 7, name: "Volt E-Bike Pro", category: "Adults", ageGroup: "Age: 18+ yrs", type: "Electric Bike", rate: 12, available: true },
+      { id: 8, name: "Aero Speedster", category: "Adults", ageGroup: "Age: 18+ yrs", type: "Road Racing Bike", rate: 7, available: true },
+
+      // Senior Citizens Models (Age 60+)
+      { id: 9, name: "Comfort Cruise Trike", category: "Senior Citizens", ageGroup: "Age: 60+ yrs", type: "3-Wheel Electric Trike", rate: 6, available: true },
+      { id: 10, name: "EasyStep Low-Entry", category: "Senior Citizens", ageGroup: "Age: 60+ yrs", type: "Ergonomic Step-Through", rate: 5, available: true },
+      { id: 11, name: "Serenity Glide E-Trike", category: "Senior Citizens", ageGroup: "Age: 60+ yrs", type: "Dual-Basket Comfort Trike", rate: 7, available: true }
     ];
 
     let currentCategory = 'All';
+    let authMode = 'login'; // 'login' or 'signup'
+    let currentUser = JSON.parse(localStorage.getItem('pedal_user')) || null;
 
-    // Fetch cycle list from localStorage or load default set
     function getCycles() {
       const saved = localStorage.getItem('cycle_list');
       if (!saved) return defaultCycles;
@@ -397,6 +487,71 @@
     let selectedCycle = null;
     let selectedPaymentMethod = 'UPI';
 
+    /* --- Auth Logic --- */
+    function updateAuthHeader() {
+      const slot = document.getElementById('auth-header-slot');
+      if (currentUser) {
+        slot.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 0.9rem; color: var(--text-muted);">Hi, <strong>${currentUser.name}</strong></span>
+            <button class="btn-solid" style="background: var(--border); color: var(--text);" onclick="logout()">Logout</button>
+          </div>
+        `;
+      } else {
+        slot.innerHTML = `<button class="btn-solid" onclick="openAuthModal('login')">Login / Sign Up</button>`;
+      }
+    }
+
+    function openAuthModal(mode) {
+      authMode = mode;
+      const title = document.getElementById('auth-modal-title');
+      const submitBtn = document.getElementById('auth-submit-btn');
+      const nameGroup = document.getElementById('name-field-group');
+      const toggleText = document.getElementById('auth-toggle-text');
+
+      if (authMode === 'signup') {
+        title.innerText = 'Create Account';
+        submitBtn.innerText = 'Sign Up';
+        nameGroup.style.display = 'block';
+        toggleText.innerHTML = `Already have an account? <span onclick="switchAuthMode()">Login</span>`;
+      } else {
+        title.innerText = 'Account Login';
+        submitBtn.innerText = 'Login';
+        nameGroup.style.display = 'none';
+        toggleText.innerHTML = `Don't have an account? <span onclick="switchAuthMode()">Sign Up</span>`;
+      }
+
+      toggleModal('auth-modal');
+    }
+
+    function switchAuthMode() {
+      const isLogin = authMode === 'login';
+      toggleModal('auth-modal');
+      openAuthModal(isLogin ? 'signup' : 'login');
+    }
+
+    document.getElementById('auth-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value;
+      const name = document.getElementById('auth-name').value || email.split('@')[0];
+
+      currentUser = { name: name, email: email };
+      localStorage.setItem('pedal_user', JSON.stringify(currentUser));
+
+      updateAuthHeader();
+      toggleModal('auth-modal');
+      this.reset();
+      alert(`Welcome ${currentUser.name}! You are now logged in.`);
+    });
+
+    function logout() {
+      currentUser = null;
+      localStorage.removeItem('pedal_user');
+      updateAuthHeader();
+      alert('Logged out successfully.');
+    }
+
+    /* --- Category & Render Logic --- */
     function filterCategory(category, buttonElement) {
       currentCategory = category;
       document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -428,6 +583,7 @@
             </div>
             <h3>${cycle.name}</h3>
             <p style="color: var(--text-muted); font-size: 0.85rem;">${cycle.type}</p>
+            <div class="age-tag">🎯 ${cycle.ageGroup}</div>
             <div class="price">$${cycle.rate} <span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">/ hr</span></div>
           </div>
           <button 
@@ -449,6 +605,11 @@
       const cycles = getCycles();
       selectedCycle = cycles.find(c => c.id === id);
       document.getElementById('modal-cycle-title').innerText = `Rent ${selectedCycle.name}`;
+      
+      if (currentUser) {
+        document.getElementById('user-name').value = currentUser.name;
+      }
+
       calculateTotal();
       toggleModal('rent-modal');
     }
@@ -554,6 +715,7 @@
     }
 
     // Initial Load
+    updateAuthHeader();
     renderCycles();
     renderHistory();
   </script>
