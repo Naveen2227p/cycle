@@ -326,22 +326,28 @@
   </div>
 
   <script>
-    // Initial cycle state loaded from localStorage or default
-    let cycles = JSON.parse(localStorage.getItem('cycle_list')) || [
+    const defaultCycles = [
       { id: 1, name: "Urban Cruiser 300", type: "City Bike", rate: 5, available: true },
       { id: 2, name: "TrailBlazer X", type: "Mountain Bike", rate: 8, available: true },
-      { id: 3, name: "Volt E-Bike Pro", type: "Electric Bike", rate: 12, available: false },
+      { id: 3, name: "Volt E-Bike Pro", type: "Electric Bike", rate: 12, available: true },
       { id: 4, name: "Aero Speedster", type: "Road Bike", rate: 7, available: true }
     ];
+
+    // Get current cycles state or load defaults
+    function getCycles() {
+      const saved = localStorage.getItem('cycle_list');
+      return saved ? JSON.parse(saved) : defaultCycles;
+    }
+
+    function saveCycles(cycles) {
+      localStorage.setItem('cycle_list', JSON.stringify(cycles));
+    }
 
     let selectedCycle = null;
     let selectedPaymentMethod = 'UPI';
 
-    function saveCycleState() {
-      localStorage.setItem('cycle_list', JSON.stringify(cycles));
-    }
-
     function renderCycles() {
+      const cycles = getCycles();
       const container = document.getElementById('cycle-container');
       container.innerHTML = cycles.map(cycle => `
         <div class="cycle-card">
@@ -357,7 +363,7 @@
             class="btn-action" 
             ${!cycle.available ? 'disabled' : ''} 
             onclick="openRentModal(${cycle.id})">
-            ${cycle.available ? 'Rent Now' : 'Unavailable'}
+            ${cycle.available ? 'Rent Now' : 'Rented Out'}
           </button>
         </div>
       `).join('');
@@ -369,6 +375,7 @@
     }
 
     function openRentModal(id) {
+      const cycles = getCycles();
       selectedCycle = cycles.find(c => c.id === id);
       document.getElementById('modal-cycle-title').innerText = `Rent ${selectedCycle.name}`;
       calculateTotal();
@@ -394,11 +401,15 @@
       const hours = document.getElementById('rent-hours').value;
       const total = selectedCycle.rate * hours;
 
-      // Update Cycle availability & persist state
-      selectedCycle.available = false;
-      saveCycleState();
+      // 1. Mark cycle as rented (unavailable)
+      const cycles = getCycles();
+      const cycleToUpdate = cycles.find(c => c.id === selectedCycle.id);
+      if (cycleToUpdate) {
+        cycleToUpdate.available = false;
+        saveCycles(cycles);
+      }
 
-      // Record History
+      // 2. Add booking to history
       const history = JSON.parse(localStorage.getItem('cycle_history') || '[]');
       history.unshift({
         id: 'BK-' + Math.floor(1000 + Math.random() * 9000),
@@ -412,7 +423,7 @@
       });
       localStorage.setItem('cycle_history', JSON.stringify(history));
 
-      // Reset and Refresh UI
+      // 3. Reset and Refresh UI
       this.reset();
       toggleModal('rent-modal');
       renderCycles();
@@ -420,28 +431,28 @@
       alert('🔒 Payment Successful! Bike Unlocked. Enjoy your ride!');
     });
 
+    // Complete ride and make cycle available for next person
     function returnCycle(bookingId) {
       const history = JSON.parse(localStorage.getItem('cycle_history') || '[]');
       const booking = history.find(item => item.id === bookingId);
 
       if (booking && booking.status === 'Active') {
-        // Update booking status
+        // Mark booking as returned
         booking.status = 'Returned';
+        localStorage.setItem('cycle_history', JSON.stringify(history));
 
-        // Set cycle back to available
+        // Make cycle available again in master array
+        const cycles = getCycles();
         const cycle = cycles.find(c => c.id === booking.cycleId);
         if (cycle) {
           cycle.available = true;
-          saveCycleState();
+          saveCycles(cycles);
         }
 
-        // Save updated history
-        localStorage.setItem('cycle_history', JSON.stringify(history));
-
-        // Refresh UI
+        // Re-render dashboard and history
         renderCycles();
         renderHistory();
-        alert(`🔓 ${booking.cycle} returned and locked successfully!`);
+        alert(`🔓 ${booking.cycle} has been returned successfully! It is now available for the next rider.`);
       }
     }
 
@@ -462,14 +473,14 @@
           <td>${item.hours}</td>
           <td>${item.payment} (${item.amount})</td>
           <td>
-            <span style="color: ${item.status === 'Active' ? 'var(--accent)' : 'var(--text-muted)'}; font-weight: 600;">
+            <span style="color: ${item.status === 'Active' ? 'var(--accent)' : 'var(--success)'}; font-weight: 600;">
               ${item.status}
             </span>
           </td>
           <td>
             ${item.status === 'Active' 
-              ? `<button class="btn-return" onclick="returnCycle('${item.id}')">Return Bike</button>` 
-              : `<span style="color: var(--success); font-size: 0.85rem;">Completed</span>`}
+              ? `<button class="btn-return" onclick="returnCycle('${item.id}')">Complete Ride & Lock</button>` 
+              : `<span style="color: var(--text-muted); font-size: 0.85rem;">Completed</span>`}
           </td>
         </tr>
       `).join('');
