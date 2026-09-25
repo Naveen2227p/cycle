@@ -71,11 +71,28 @@
       cursor: pointer;
       font-weight: 600;
       transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .btn-outline:hover {
       background: var(--accent);
       color: #000;
+    }
+
+    .history-badge {
+      background: var(--accent);
+      color: #0f172a;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .btn-outline:hover .history-badge {
+      background: #0f172a;
+      color: var(--accent);
     }
 
     .btn-solid {
@@ -420,7 +437,9 @@
       <div class="brand">🚲 PedalPulse Kiosk</div>
       <div class="header-actions">
         <button class="btn-add-cycle" onclick="toggleModal('add-cycle-modal')">➕ Add Bicycle</button>
-        <button class="btn-outline" onclick="toggleModal('history-modal')">📋 Booking History</button>
+        <button class="btn-outline" onclick="toggleModal('history-modal')">
+          📋 Booking History <span class="history-badge" id="booking-count-badge">0</span>
+        </button>
         <div id="auth-header-slot">
           <button class="btn-solid" onclick="openAuthModal('login')">Login / Sign Up</button>
         </div>
@@ -946,6 +965,12 @@
     function renderHistory() {
       const history = JSON.parse(localStorage.getItem('cycle_history') || '[]');
       const container = document.getElementById('history-list');
+
+      // Update badge count
+      const badge = document.getElementById('booking-count-badge');
+      if (badge) {
+        badge.innerText = history.length;
+      }
 
       if (history.length === 0) {
         container.innerHTML = `<tr><td colspan="7" style="text-align:center; color: var(--text-muted);">No booking history found.</td></tr>`;
